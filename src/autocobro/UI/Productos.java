@@ -1,11 +1,10 @@
 package autocobro.UI;
 
-import autocobro.Modelos.Producto;
 import autocobro.Util.ConectorBD;
+import autocobro.Modelos.Producto;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,8 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static javax.swing.SwingConstants.CENTER;
-
 public class Productos extends JPanel {
 
     private FrameP framePrincipal;
@@ -23,11 +20,12 @@ public class Productos extends JPanel {
 
     public Productos(FrameP framePrincipal) {
         this.framePrincipal = framePrincipal;
-        setLayout(new GridBagLayout());
+        setLayout(null); // uso de coordenadas absolutas
         setBackground(new Color(220, 220, 220));
 
         JPanel panelPrincipal = crearPanelContenido();
-        add(panelPrincipal, new GridBagConstraints());
+        panelPrincipal.setBounds(10, 20, 780, 540); // ocupa casi todo el JFrame
+        add(panelPrincipal);
 
         cargarProductos();
     }
@@ -39,8 +37,8 @@ public class Productos extends JPanel {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color color1 = new Color(0, 204, 153);
-                Color color2 = new Color(15, 60, 15);
+                Color color1 = new Color(0, 204, 153);   // verde
+                Color color2 = new Color(60, 60, 60);   // gris oscuro
                 GradientPaint gp = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
                 g2d.setPaint(gp);
                 int cornerRadius = 30;
@@ -48,88 +46,81 @@ public class Productos extends JPanel {
                 g2d.fill(roundedRect);
             }
         };
-        panel.setLayout(new GridBagLayout());
-        // 👇 más grande, casi del tamaño del JFrame (800x600)
-        panel.setPreferredSize(new Dimension(850, 700));
+        panel.setLayout(null);
+        panel.setOpaque(false);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 20, 10, 20);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
+        // --- Título ---
         JLabel titulo = new JLabel("Productos");
-        titulo.setFont(new Font("Arial", Font.BOLD, 28));
-        titulo.setForeground(Color.WHITE);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(20, 20, 20, 20);
-        panel.add(titulo, gbc);
+        titulo.setFont(new Font("Arial", Font.BOLD, 26));
+        titulo.setForeground(Color.BLACK);
+        titulo.setBounds(30, 20, 200, 40);
+        panel.add(titulo);
 
-        JButton botonMisProductos = new BotonRedondeado("Mis Productos", new Color(153, 51, 255));
-        gbc.gridx = 2; gbc.gridy = 0; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.EAST;
-        gbc.insets = new Insets(20, 20, 20, 20); gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        panel.add(botonMisProductos, gbc);
-
+        // --- Botón "Mis Productos" ---
+        JButton botonMisProductos = crearBoton("Mis Productos");
+        botonMisProductos.setBounds(600, 20, 120, 30);
+        panel.add(botonMisProductos);
         botonMisProductos.addActionListener(e -> {
             framePrincipal.mostrarPanel(FrameP.MIS_PRODUCTOS_PANEL);
         });
 
-        JButton botonCategorias = new BotonRedondeado("Categorias", new Color(153, 51, 255));
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1; gbc.insets = new Insets(10, 20, 10, 5);
-        gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.WEST;
-        panel.add(botonCategorias, gbc);
+        // --- Botón Categorías ---
+        JButton botonCategorias = crearBoton("Categorías");
+        botonCategorias.setBounds(30, 70, 100, 30);
+        panel.add(botonCategorias);
 
-        JLabel nombreCategoriaLabel = new JLabel("(Nombre categoria)");
-        nombreCategoriaLabel.setForeground(Color.WHITE);
-        nombreCategoriaLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        gbc.gridx = 1; gbc.gridy = 1; gbc.gridwidth = 3; gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(10, 5, 10, 20); gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel.add(nombreCategoriaLabel, gbc);
+        // --- Label Categoría ---
+        JLabel nombreCategoriaLabel = new JLabel("(Nombre categoría)");
+        nombreCategoriaLabel.setForeground(Color.BLACK);
+        nombreCategoriaLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        nombreCategoriaLabel.setBounds(150, 70, 200, 30);
+        panel.add(nombreCategoriaLabel);
 
-        JPanel headersPanel = new JPanel(new GridLayout(1, 4, 10, 0));
-        headersPanel.setOpaque(false);
-        headersPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        // --- Encabezados ---
+        int yHeaders = 120;
+        panel.add(crearHeader("Nombre", 30, yHeaders, 150, 25));
+        panel.add(crearHeader("Descripción", 190, yHeaders, 200, 25));
+        panel.add(crearHeader("Cantidad", 400, yHeaders, 100, 25));
+        panel.add(crearHeader("Precio", 510, yHeaders, 100, 25));
 
-        JLabel nombreHeader = new JLabel("Nombre", CENTER);
-        nombreHeader.setForeground(Color.WHITE);
-        headersPanel.add(nombreHeader);
-
-        JLabel descripcionHeader = new JLabel("Descripción", CENTER);
-        descripcionHeader.setForeground(Color.WHITE);
-        headersPanel.add(descripcionHeader);
-
-        JLabel cantidadHeader = new JLabel("Cantidad", CENTER);
-        cantidadHeader.setForeground(Color.WHITE);
-        headersPanel.add(cantidadHeader);
-
-        JLabel precioHeader = new JLabel("Precio", CENTER);
-        precioHeader.setForeground(Color.WHITE);
-        headersPanel.add(precioHeader);
-
-        gbc.gridy = 2; gbc.gridx = 0; gbc.gridwidth = 4; gbc.weighty = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.insets = new Insets(20, 20, 5, 20);
-        panel.add(headersPanel, gbc);
-
+        // --- Panel tabla con scroll ---
         tablaContenido = new JPanel();
         tablaContenido.setOpaque(false);
-        tablaContenido.setLayout(new BoxLayout(tablaContenido, BoxLayout.Y_AXIS));
-
-        gbc.gridy = 3; gbc.gridx = 0; gbc.gridwidth = 4; gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH; gbc.insets = new Insets(0, 20, 20, 20);
+        tablaContenido.setLayout(null);
 
         JScrollPane scrollPane = new JScrollPane(tablaContenido);
+        scrollPane.setBounds(30, 150, 600, 300);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        // 👇 deshabilitamos scroll horizontal
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        panel.add(scrollPane);
 
-        panel.add(scrollPane, gbc);
-
-        JButton botonAgregar = new BotonRedondeado("Agregar", new Color(153, 51, 255));
-        gbc.gridx = 3; gbc.gridy = 4; gbc.gridwidth = 1; gbc.anchor = GridBagConstraints.EAST;
-        gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0; gbc.insets = new Insets(30, 20, 20, 20);
-        panel.add(botonAgregar, gbc);
+        // --- Botón Agregar ---
+        JButton botonAgregar = crearBoton("Agregar");
+        botonAgregar.setBounds(530, 470, 100, 30);
+        panel.add(botonAgregar);
 
         return panel;
+    }
+
+    private JLabel crearHeader(String texto, int x, int y, int w, int h) {
+        JLabel label = new JLabel(texto, SwingConstants.CENTER);
+        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setForeground(Color.WHITE);
+        label.setBounds(x, y, w, h);
+        return label;
+    }
+
+    private JButton crearBoton(String texto) {
+        JButton boton = new JButton(texto);
+        boton.setFont(new Font("Arial", Font.BOLD, 12));
+        boton.setForeground(Color.WHITE);
+        boton.setBackground(new Color(180, 40, 180));
+        boton.setFocusPainted(false);
+        boton.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        boton.setOpaque(true);
+        return boton;
     }
 
     private void cargarProductos() {
@@ -157,49 +148,34 @@ public class Productos extends JPanel {
 
     public void mostrarProductos(List<Producto> productos) {
         tablaContenido.removeAll();
-        tablaContenido.revalidate();
 
+        int y = 10;
         for (Producto producto : productos) {
-            JPanel fila = new JPanel();
-            fila.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 5));
-            fila.setOpaque(false);
-            // 👇 cada fila ocupará casi todo el ancho del panel
-            fila.setPreferredSize(new Dimension(700, 40));
+            JTextField nombre = crearCelda(producto.getNombre(), 30, y, 150, 25);
+            JTextField descripcion = crearCelda(producto.getDescripcion(), 190, y, 200, 25);
+            JTextField cantidad = crearCelda("0", 400, y, 100, 25);
+            cantidad.setEditable(true);
+            JTextField precio = crearCelda("$" + String.format("%.2f", producto.getPrecio()), 510, y, 100, 25);
 
-            JLabel nombre = new JLabel(producto.getNombre(), CENTER);
-            nombre.setPreferredSize(new Dimension(180, 30));
-            nombre.setHorizontalAlignment(SwingConstants.CENTER);
-            nombre.setForeground(Color.WHITE);
-            fila.add(nombre);
+            tablaContenido.add(nombre);
+            tablaContenido.add(descripcion);
+            tablaContenido.add(cantidad);
+            tablaContenido.add(precio);
 
-            JLabel descripcion = new JLabel(producto.getDescripcion(), CENTER);
-            descripcion.setPreferredSize(new Dimension(250, 30));
-            descripcion.setHorizontalAlignment(SwingConstants.CENTER);
-            descripcion.setForeground(Color.WHITE);
-            fila.add(descripcion);
-
-            JTextField cantidad = new JTextField("0", 5);
-            cantidad.setHorizontalAlignment(JTextField.CENTER);
-            cantidad.setEditable(false);
-            cantidad.setPreferredSize(new Dimension(80, 30));
-            fila.add(cantidad);
-
-            JLabel precio = new JLabel("$" + String.format("%.2f", producto.getPrecio()), CENTER);
-            precio.setPreferredSize(new Dimension(120, 30));
-            precio.setHorizontalAlignment(SwingConstants.CENTER);
-            precio.setForeground(Color.WHITE);
-            fila.add(precio);
-
-            fila.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    cantidad.setEditable(true);
-                }
-            });
-
-            tablaContenido.add(fila);
+            y += 35;
         }
 
+        tablaContenido.setPreferredSize(new Dimension(600, y));
+        tablaContenido.revalidate();
         tablaContenido.repaint();
+    }
+
+    private JTextField crearCelda(String texto, int x, int y, int w, int h) {
+        JTextField campo = new JTextField(texto);
+        campo.setHorizontalAlignment(JTextField.CENTER);
+        campo.setEditable(false);
+        campo.setBackground(new Color(200, 200, 200));
+        campo.setBounds(x, y, w, h);
+        return campo;
     }
 }

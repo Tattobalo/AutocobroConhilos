@@ -2,7 +2,7 @@ package autocobro.Nucleo;
 
 import autocobro.UI.FrameP;
 import autocobro.UI.Login;
-import autocobro.UI.Productos;
+import autocobro.Modelos.Usuarios;
 import autocobro.Util.ConectorBD;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,10 +15,10 @@ import java.security.NoSuchAlgorithmException;
 
 public class LoginThread extends Thread {
     
-    private final String nombreUsuario;
-    private final String contrasena;
-    private final Login loginPanel;
-    private final FrameP framePrincipal;
+    private String nombreUsuario;
+    private String contrasena;
+    private Login loginPanel;
+    private FrameP framePrincipal;
     
     public LoginThread(String nombreUsuario, String contrasena, Login loginPanel, FrameP framePrincipal) {
         this.nombreUsuario = nombreUsuario;
@@ -29,36 +29,42 @@ public class LoginThread extends Thread {
 
     @Override
     public void run() {
+        System.out.println("HILO 1 (Login): Iniciando proceso de autenticación para " + nombreUsuario + ".");
+
         Connection conexion = null;
         try {
             conexion = ConectorBD.conectar();
-            String query = "SELECT contrasena FROM usuarios WHERE nombre_usuario = ?";
+            String query = "SELECT id, nombre_usuario, correo, ruta_foto_perfil FROM usuarios WHERE nombre_usuario = ? AND contrasena = ?";
             
-            // Usamos PreparedStatement para evitar inyecciones SQL
+            String contrasenaHash = hashearContrasena(contrasena);
+            
             try (PreparedStatement pstmt = conexion.prepareStatement(query)) {
                 pstmt.setString(1, nombreUsuario);
+                pstmt.setString(2, contrasenaHash);
                 
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        String contrasenaHashGuardada = rs.getString("contrasena");
+                        int id = rs.getInt("id");
+                        String nombreUsuario = rs.getString("nombre_usuario");
+                        String correo = rs.getString("correo");
+                        String rutaFoto = rs.getString("ruta_foto_perfil");
                         
-                        // Verifica la contraseña
-                        if (verificarContrasena(contrasena, contrasenaHashGuardada)) {
-                            // Si el login es exitoso, actualiza la UI en el EDT
-                            SwingUtilities.invokeLater(() -> {
-                                JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                                // Aquí puedes mostrar la siguiente interfaz (ej. 'Productos')
-                                framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL); 
-                            });
-                        } else {
-                            SwingUtilities.invokeLater(() -> {
-                                JOptionPane.showMessageDialog(loginPanel, "Contraseña incorrecta.", "Error", JOptionPane.ERROR_MESSAGE);
-                            });
-                        }
+                        Usuarios usuario = new Usuarios(id, nombreUsuario, correo, rutaFoto);
+                        
+                        SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                            
+                            framePrincipal.setUsuarioActual(usuario);
+                            framePrincipal.iniciarSesion(); // <-- Inicia el HILO 2 (Sesión) aquí
+                            
+                            framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL); 
+                        });
+                        System.out.println("HILO 1 (Login): Autenticación exitosa. Se inició la sesión.");
                     } else {
                         SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(loginPanel, "Usuario no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(loginPanel, "Usuario o contraseña incorrectos.", "Error", JOptionPane.ERROR_MESSAGE);
                         });
+                        System.out.println("HILO 1 (Login): Autenticación fallida. Usuario o contraseña incorrectos.");
                     }
                 }
             }
@@ -66,6 +72,12 @@ public class LoginThread extends Thread {
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(loginPanel, "Error al conectar a la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             });
+            System.out.println("HILO 1 (Login): Error de SQL: " + e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(loginPanel, "Error de seguridad al verificar la contraseña.", "Error", JOptionPane.ERROR_MESSAGE);
+            });
+            System.out.println("HILO 1 (Login): Error de seguridad al hashear la contraseña.");
         } finally {
             if (conexion != null) {
                 try {
@@ -75,25 +87,34 @@ public class LoginThread extends Thread {
                 }
             }
         }
+        System.out.println("HILO 1 (Login): Hilo finalizado.");
     }
 
-    // Método para hashear y verificar contraseñas de forma segura
-    private boolean verificarContrasena(String contrasenaPlana, String contrasenaHash) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(contrasenaPlana.getBytes());
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
+    private String hashearContrasena(String contrasenaPlana) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(contrasenaPlana.getBytes());
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
             }
-            return hexString.toString().equals(contrasenaHash);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return false;
+            hexString.append(hex);
         }
+        return hexString.toString();
+    }
+    
+    private boolean verificarContrasena(String contrasenaPlana, String contrasenaHash) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(contrasenaPlana.getBytes());
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString().equals(contrasenaHash);
     }
 }

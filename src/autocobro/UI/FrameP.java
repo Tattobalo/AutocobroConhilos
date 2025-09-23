@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import autocobro.Modelos.Usuarios;
+import autocobro.Nucleo.SesionThread;
 
 public class FrameP extends JFrame {
 
@@ -14,6 +16,9 @@ public class FrameP extends JFrame {
 
     private CardLayout cardLayout = new CardLayout();
     private JPanel cardPanel = new JPanel(cardLayout);
+    
+    private SesionThread sesionThread;
+    private Usuarios usuarioActual;
 
     public FrameP() {
         setTitle("AutoCobro");
@@ -40,7 +45,7 @@ public class FrameP extends JFrame {
         titleBarPanel.add(closeButton);
 
         mainContainer.add(titleBarPanel, BorderLayout.NORTH);
-
+        
         // Instancia y agrega los paneles al CardLayout
         Login loginPanel = new Login(this);
         Registro registroPanel = new Registro(this);
@@ -52,11 +57,7 @@ public class FrameP extends JFrame {
         cardPanel.add(productosPanel, PRODUCTOS_PANEL);
         cardPanel.add(misProductosPanel, MIS_PRODUCTOS_PANEL); // <-- Agrega el panel de Mis Productos
 
-        JPanel panelCentral = new JPanel(new GridBagLayout());
-        panelCentral.setBackground(new Color(220, 220, 220));
-        panelCentral.add(cardPanel);
-
-        mainContainer.add(panelCentral, BorderLayout.CENTER);
+        mainContainer.add(cardPanel, BorderLayout.CENTER);
 
         MouseAdapter windowMover = new MouseAdapter() {
             private Point initialClick;
@@ -76,6 +77,27 @@ public class FrameP extends JFrame {
         add(mainContainer);
     }
 
+    public void setUsuarioActual(Usuarios usuario) {
+        this.usuarioActual = usuario;
+    }
+    
+    public Usuarios getUsuarioActual() {
+        return usuarioActual;
+    }
+    
+    public void iniciarSesion() {
+        if (sesionThread == null || !sesionThread.isAlive()) {
+            sesionThread = new SesionThread();
+            sesionThread.start();
+        }
+    }
+    
+    public void cerrarSesion() {
+        if (sesionThread != null && sesionThread.isAlive()) {
+            sesionThread.detenerSesion();
+        }
+    }
+    
     private JButton createControlButton(String text) {
         JButton button = new JButton(text);
         button.setFocusPainted(false);
