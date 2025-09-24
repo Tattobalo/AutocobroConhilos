@@ -26,8 +26,11 @@ public class CampoFoto extends JPanel {
         setMaximumSize(new Dimension(ancho, alto));
         setLayout(new GridBagLayout());
 
-        etiquetaMensaje = new JLabel("Clic para agregar foto");
+        etiquetaMensaje = new JLabel();
         etiquetaMensaje.setForeground(Color.WHITE);
+        if (esSeleccionable) {
+            etiquetaMensaje.setText("Click para seleccionar");
+        }
         add(etiquetaMensaje);
 
         // La lógica del mouse solo se agrega si el componente es seleccionable
@@ -46,8 +49,7 @@ public class CampoFoto extends JPanel {
                     if (resultado == JFileChooser.APPROVE_OPTION) {
                         File archivoSeleccionado = fileChooser.getSelectedFile();
                         // Obtenemos solo el nombre del archivo
-                        rutaArchivoSeleccionado = archivoSeleccionado.getName();
-
+                        rutaArchivoSeleccionado = archivoSeleccionado.getAbsolutePath();
                         // La lógica para cargar la imagen necesita la ruta completa temporalmente
                         cargarImagen(archivoSeleccionado.getAbsolutePath());
                     }
@@ -65,7 +67,7 @@ public class CampoFoto extends JPanel {
                     etiquetaMensaje.setVisible(false);
                     repaint();
                 } else {
-                    System.out.println("No se encontró el archivo en la ruta: " + rutaImagen);
+                    System.out.println("No se encontro el archivo en la ruta: " + rutaImagen);
                 }
             } catch (Exception ex) {
                 System.out.println("Error al cargar la imagen: " + ex.getMessage());
@@ -94,6 +96,7 @@ public class CampoFoto extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
+        // Fondo semi-transparente con bordes redondeados
         g2d.setColor(new Color(255, 255, 255, 150));
         g2d.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 30, 30));
 
@@ -101,8 +104,17 @@ public class CampoFoto extends JPanel {
         g2d.draw(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 30, 30));
 
         if (imagenPerfil != null) {
+            // Crear un clip con bordes redondeados para la imagen
+            RoundRectangle2D clip = new RoundRectangle2D.Double(0, 0, ancho, alto, 30, 30);
+            g2d.setClip(clip);
+
+            // Dibujar la imagen escalada
             Image imagenEscalada = imagenPerfil.getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
             g2d.drawImage(imagenEscalada, 0, 0, this);
+
+            // Quitar el clip para no afectar otros dibujos
+            g2d.setClip(null);
         }
     }
+
 }

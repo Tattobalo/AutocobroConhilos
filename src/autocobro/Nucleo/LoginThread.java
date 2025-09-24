@@ -52,19 +52,19 @@ public class LoginThread extends Thread {
                         Usuarios usuario = new Usuarios(id, nombreUsuario, correo, rutaFoto);
                         
                         SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso!", "Exito", JOptionPane.INFORMATION_MESSAGE);
                             
                             framePrincipal.setUsuarioActual(usuario);
                             framePrincipal.iniciarSesion(); // <-- Inicia el HILO 2 (Sesión) aquí
                             
                             framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL); 
                         });
-                        System.out.println("HILO 1 (Login): Autenticación exitosa. Se inició la sesión.");
+                        System.out.println("HILO 1 (Login): Autenticacion exitosa. Se inició la sesion.");
                     } else {
                         SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(loginPanel, "Usuario o contraseña incorrectos.", "Error", JOptionPane.ERROR_MESSAGE);
                         });
-                        System.out.println("HILO 1 (Login): Autenticación fallida. Usuario o contraseña incorrectos.");
+                        System.out.println("HILO 1 (Login): Autenticacion fallida. Usuario o contraseña incorrectos.");
                     }
                 }
             }

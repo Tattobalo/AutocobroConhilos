@@ -3,9 +3,8 @@ package autocobro.UI;
 import autocobro.Nucleo.RegistroThread;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
 
 public class Registro extends JPanel {
 
@@ -41,10 +40,10 @@ public class Registro extends JPanel {
                 g2d.fill(rectanguloRedondeado);
             }
         };
-        
+
         panel.setLayout(null);
         panel.setOpaque(false);
-        
+
         // 🔹 Título
         JLabel titulo = new JLabel("Registro");
         titulo.setFont(new Font("Arial", Font.BOLD, 28));
@@ -101,22 +100,22 @@ public class Registro extends JPanel {
         JButton botonRegistrarse = new BotonRedondeado("Registrarse", new Color(153, 51, 255));
         botonRegistrarse.setBounds(180, 340, 200, 40);
         panel.add(botonRegistrarse);
-        
-        
+
         botonRegistrarse.addActionListener(e -> {
             String usuario = campoUsuario.getText();
             String contrasena = new String(campoContrasena.getPassword());
             String correo = campoCorreo.getText();
 
-            if (usuario.isEmpty() || contrasena.isEmpty() || correo.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor, complete todos los campos obligatorios.", "Error de validación", JOptionPane.ERROR_MESSAGE);
-                return;
+            String rutaFotoTemporal = campoFoto.getRutaArchivoSeleccionado();
+            if (rutaFotoTemporal != null && !rutaFotoTemporal.isEmpty()) {
+                File archivo = new File(rutaFotoTemporal);
+                rutaFotoTemporal = archivo.getAbsolutePath(); // esto asegura que la copia se haga correctamente
             }
 
             // Inicia el hilo de registro
-            new RegistroThread(usuario, contrasena, correo, this.rutaFoto, this, framePrincipal).start();
+            new RegistroThread(usuario, contrasena, correo, rutaFotoTemporal, this, framePrincipal).start();
         });
-        
+
         return panel;
     }
 }

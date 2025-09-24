@@ -1,5 +1,6 @@
 package autocobro.UI;
 
+import autocobro.Modelos.Carrito;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -16,9 +17,10 @@ public class FrameP extends JFrame {
 
     private CardLayout cardLayout = new CardLayout();
     private JPanel cardPanel = new JPanel(cardLayout);
-    
+
     private SesionThread sesionThread;
     private Usuarios usuarioActual;
+    private Carrito carrito;
 
     public FrameP() {
         setTitle("AutoCobro");
@@ -26,6 +28,8 @@ public class FrameP extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setUndecorated(true);
+
+        this.carrito = new Carrito();
 
         JPanel mainContainer = new JPanel(new BorderLayout());
         mainContainer.setBackground(new Color(220, 220, 220));
@@ -45,13 +49,13 @@ public class FrameP extends JFrame {
         titleBarPanel.add(closeButton);
 
         mainContainer.add(titleBarPanel, BorderLayout.NORTH);
-        
+
         // Instancia y agrega los paneles al CardLayout
         Login loginPanel = new Login(this);
         Registro registroPanel = new Registro(this);
         Productos productosPanel = new Productos(this);
         MisProductos misProductosPanel = new MisProductos(this); // <-- Nueva instancia
-        
+
         cardPanel.add(loginPanel, LOGIN_PANEL);
         cardPanel.add(registroPanel, REGISTRO_PANEL);
         cardPanel.add(productosPanel, PRODUCTOS_PANEL);
@@ -61,7 +65,11 @@ public class FrameP extends JFrame {
 
         MouseAdapter windowMover = new MouseAdapter() {
             private Point initialClick;
-            public void mousePressed(MouseEvent e) { initialClick = e.getPoint(); }
+
+            public void mousePressed(MouseEvent e) {
+                initialClick = e.getPoint();
+            }
+
             public void mouseDragged(MouseEvent e) {
                 int thisX = getLocation().x;
                 int thisY = getLocation().y;
@@ -80,24 +88,28 @@ public class FrameP extends JFrame {
     public void setUsuarioActual(Usuarios usuario) {
         this.usuarioActual = usuario;
     }
-    
+
     public Usuarios getUsuarioActual() {
         return usuarioActual;
     }
-    
+
     public void iniciarSesion() {
         if (sesionThread == null || !sesionThread.isAlive()) {
             sesionThread = new SesionThread();
             sesionThread.start();
         }
     }
-    
+
     public void cerrarSesion() {
         if (sesionThread != null && sesionThread.isAlive()) {
             sesionThread.detenerSesion();
         }
     }
-    
+
+    public Carrito getCarrito() {
+        return this.carrito;
+    }
+
     private JButton createControlButton(String text) {
         JButton button = new JButton(text);
         button.setFocusPainted(false);
@@ -110,5 +122,13 @@ public class FrameP extends JFrame {
 
     public void mostrarPanel(String nombrePanel) {
         cardLayout.show(cardPanel, nombrePanel);
+
+        if (nombrePanel.equals(MIS_PRODUCTOS_PANEL)) {
+            for (Component comp : cardPanel.getComponents()) {
+                if (comp instanceof MisProductos mp) {
+                    mp.mostrarProductosCarrito(); // Esto carga la foto y productos
+                }
+            }
+        }
     }
 }

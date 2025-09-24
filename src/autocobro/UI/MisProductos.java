@@ -13,6 +13,9 @@ public class MisProductos extends JPanel {
     private final FrameP framePrincipal;
     private CampoFoto campoFoto;
 
+    private JPanel tablaContenido;
+    private JTextField precioFinalField;
+
     public MisProductos(FrameP framePrincipal) {
         this.framePrincipal = framePrincipal;
         setLayout(null);
@@ -26,16 +29,16 @@ public class MisProductos extends JPanel {
         panelContenido.setBounds(190, 10, 600, 550);
         add(panelContenido);
 
-        SwingUtilities.invokeLater(this::mostrarFotoUsuario);
+        //SwingUtilities.invokeLater(this::mostrarFotoUsuario);
     }
 
-    private void mostrarFotoUsuario() {
+    /*private void mostrarFotoUsuario() {
         Usuarios usuario = framePrincipal.getUsuarioActual();
         if (usuario != null && usuario.getRutaFotoPerfil() != null && !usuario.getRutaFotoPerfil().isEmpty()) {
-            String rutaCompleta = "fotos_perfil" + File.separator + usuario.getRutaFotoPerfil();
+            String rutaCompleta = "Images" + File.separator + usuario.getRutaFotoPerfil();
             campoFoto.cargarImagen(rutaCompleta);
         }
-    }
+    }*/
 
     private JPanel crearPanelLateral() {
         JPanel panel = new JPanel() {
@@ -55,16 +58,17 @@ public class MisProductos extends JPanel {
         };
         panel.setLayout(null);
         panel.setOpaque(false);
-        
+
         campoFoto = new CampoFoto(150, 150, false);
         campoFoto.setBounds(10, 10, 150, 150);
+        campoFoto.setOpaque(false);
         panel.add(campoFoto);
-        
+
         JPanel separador = new JPanel();
         separador.setBounds(10, 170, 150, 2);
         separador.setBackground(Color.WHITE);
         panel.add(separador);
-        
+
         JLabel agregarProductosLabel = new JLabel("Agregar Productos");
         agregarProductosLabel.setForeground(Color.WHITE);
         agregarProductosLabel.setFont(new Font("Arial", Font.BOLD, 16));
@@ -127,12 +131,25 @@ public class MisProductos extends JPanel {
         precioHeader.setBounds(470, 80, 100, 30);
         panel.add(precioHeader);
 
+        // Aquí va la tabla de productos
+        tablaContenido = new JPanel();
+        tablaContenido.setOpaque(false);
+        tablaContenido.setLayout(null);
+
+        JScrollPane scrollPane = new JScrollPane(tablaContenido);
+        scrollPane.setBounds(20, 120, 560, 300);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        panel.add(scrollPane);
+
         JLabel precioFinalLabel = new JLabel("Precio final:");
         precioFinalLabel.setForeground(Color.WHITE);
         precioFinalLabel.setBounds(360, 460, 100, 30);
         panel.add(precioFinalLabel);
 
-        JTextField precioFinalField = new JTextField();
+        // ahora sí usamos el atributo de clase
+        precioFinalField = new JTextField();
         precioFinalField.setEditable(false);
         precioFinalField.setBounds(470, 460, 100, 30);
         panel.add(precioFinalField);
@@ -142,5 +159,60 @@ public class MisProductos extends JPanel {
         panel.add(botonPagar);
 
         return panel;
+    }
+
+    public void mostrarProductosCarrito() {
+
+        Usuarios usuario = framePrincipal.getUsuarioActual();
+        if (usuario != null && usuario.getRutaFotoPerfil() != null && !usuario.getRutaFotoPerfil().isEmpty()) {
+            String rutaCompleta = "Images" + File.separator + usuario.getRutaFotoPerfil();
+            campoFoto.cargarImagen(rutaCompleta);
+        }
+
+        tablaContenido.removeAll();
+        tablaContenido.revalidate();
+        tablaContenido.setLayout(null);
+
+        java.util.List<autocobro.Modelos.ProductoSeleccionado> productos = framePrincipal.getCarrito().getProductos();
+
+        int y = 10;
+        double total = 0;
+
+        for (autocobro.Modelos.ProductoSeleccionado producto : productos) {
+            JPanel fila = new JPanel();
+            fila.setLayout(null);
+            fila.setOpaque(false);
+            fila.setBounds(0, y, 540, 30);
+
+            JTextField nombre = crearCelda(producto.getNombre(), 0, 0, 150, 25);
+            JTextField descripcion = crearCelda(producto.getDescripcion(), 160, 0, 200, 25);
+            JTextField cantidad = crearCelda(String.valueOf(producto.getCantidad()), 370, 0, 50, 25);
+            JTextField precio = crearCelda("$" + String.format("%.2f", producto.getPrecio() * producto.getCantidad()), 430, 0, 100, 25);
+
+            fila.add(nombre);
+            fila.add(descripcion);
+            fila.add(cantidad);
+            fila.add(precio);
+
+            tablaContenido.add(fila);
+            y += 35;
+
+            total += producto.getCantidad() * producto.getPrecio();
+        }
+
+        tablaContenido.setPreferredSize(new Dimension(540, y));
+        tablaContenido.revalidate();
+        tablaContenido.repaint();
+
+        precioFinalField.setText("$" + String.format("%.2f", total));
+    }
+
+    private JTextField crearCelda(String texto, int x, int y, int w, int h) {
+        JTextField campo = new JTextField(texto);
+        campo.setHorizontalAlignment(JTextField.CENTER);
+        campo.setEditable(false);
+        campo.setBackground(new Color(200, 200, 200));
+        campo.setBounds(x, y, w, h);
+        return campo;
     }
 }

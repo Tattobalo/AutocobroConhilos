@@ -17,14 +17,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 public class RegistroThread extends Thread {
-    
+
     private String nombreUsuario;
     private String contrasena;
     private String correo;
     private String rutaFoto; // La ruta temporal de la foto seleccionada
     private Registro registroPanel;
     private FrameP framePrincipal;
-    
+
     public RegistroThread(String nombreUsuario, String contrasena, String correo, String rutaFoto, Registro registroPanel, FrameP framePrincipal) {
         this.nombreUsuario = nombreUsuario;
         this.contrasena = contrasena;
@@ -40,37 +40,42 @@ public class RegistroThread extends Thread {
         try {
             conexion = ConectorBD.conectar();
             String contrasenaHash = hashearContrasena(contrasena);
-            
+
             String nombreArchivoFoto = null;
             if (rutaFoto != null && !rutaFoto.isEmpty()) {
                 try {
-                    File archivoOriginal = new File(rutaFoto);
-                    String nombreDeArchivo = archivoOriginal.getName();
-                    
-                    Path destino = Paths.get("fotos_perfil", nombreDeArchivo);
-                    Files.createDirectories(destino.getParent());
-                    Files.copy(archivoOriginal.toPath(), destino, StandardCopyOption.REPLACE_EXISTING);
+                    File archivo = new File(rutaFoto);
+                    System.out.println("Archivo existe: " + archivo.exists()); // <--- aquí
+                    System.out.println("Ruta absoluta: " + archivo.getAbsolutePath());
 
-                    // Solo guarda el nombre del archivo en la base de datos
-                    nombreArchivoFoto = destino.getFileName().toString(); 
+                    Path carpetaDestino = Paths.get("Images");
+                    if (!Files.exists(carpetaDestino)) {
+                        Files.createDirectories(carpetaDestino);
+                    }
+
+                    Path destino = carpetaDestino.resolve(archivo.getName());
+                    Files.copy(archivo.toPath(), destino, StandardCopyOption.REPLACE_EXISTING);
+
+                    nombreArchivoFoto = destino.getFileName().toString();
                 } catch (Exception e) {
-                     SwingUtilities.invokeLater(() -> {
+                    e.printStackTrace();
+                    SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(registroPanel, "Error al guardar la foto: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     });
-                    return; // Detiene el hilo si no se puede guardar la foto
+                    return;
                 }
             }
-            
+
             String query = "INSERT INTO usuarios (nombre_usuario, contrasena, correo, ruta_foto_perfil) VALUES (?, ?, ?, ?)";
-            
+
             try (PreparedStatement pstmt = conexion.prepareStatement(query)) {
                 pstmt.setString(1, nombreUsuario);
                 pstmt.setString(2, contrasenaHash);
                 pstmt.setString(3, correo);
                 pstmt.setString(4, nombreArchivoFoto);
-                
+
                 int filasAfectadas = pstmt.executeUpdate();
-                
+
                 if (filasAfectadas > 0) {
                     SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(registroPanel, "¡Registro exitoso!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
@@ -87,7 +92,7 @@ public class RegistroThread extends Thread {
                 JOptionPane.showMessageDialog(registroPanel, "Error al conectar a la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             });
         } catch (NoSuchAlgorithmException e) {
-             SwingUtilities.invokeLater(() -> {
+            SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(registroPanel, "Error de seguridad al hashear la contraseña.", "Error", JOptionPane.ERROR_MESSAGE);
             });
         } finally {
@@ -100,7 +105,7 @@ public class RegistroThread extends Thread {
             }
         }
     }
-    
+
     private String hashearContrasena(String contrasenaPlana) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         byte[] hash = md.digest(contrasenaPlana.getBytes());

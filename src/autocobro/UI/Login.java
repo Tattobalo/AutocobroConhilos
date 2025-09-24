@@ -99,6 +99,9 @@ public class Login extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 framePrincipal.mostrarPanel(FrameP.REGISTRO_PANEL);
+                
+                
+                
             }
         });
         panel.add(enlaceRegistrarse);
