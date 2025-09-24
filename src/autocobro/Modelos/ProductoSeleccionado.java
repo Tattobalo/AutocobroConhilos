@@ -32,4 +32,15 @@ public class ProductoSeleccionado {
     public double getSubtotal() {
         return precio * cantidad;
     }
+
+    public void setPrecio(double precio) {
+        this.precio = precio;
+    }
+    
+    // Setter para cantidad
+    public synchronized void setCantidad(int nuevaCantidad) {
+        this.cantidad = nuevaCantidad;
+        // Aquí podrías notificar a un listener/hilo
+        System.out.println("[ProductoActualizado] " + nombre + " ahora tiene cantidad: " + cantidad);
+    }
 }

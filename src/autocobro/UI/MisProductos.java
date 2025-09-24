@@ -39,7 +39,6 @@ public class MisProductos extends JPanel {
             campoFoto.cargarImagen(rutaCompleta);
         }
     }*/
-
     private JPanel crearPanelLateral() {
         JPanel panel = new JPanel() {
             @Override
@@ -157,6 +156,13 @@ public class MisProductos extends JPanel {
         JButton botonPagar = new BotonRedondeado("Pagar", new Color(153, 51, 255));
         botonPagar.setBounds(470, 500, 100, 40);
         panel.add(botonPagar);
+
+        botonPagar.addActionListener(e -> {
+            framePrincipal.detenerHilosCarrito(); //detenemos hilo 3 y 4
+            framePrincipal.cerrarSesion();  // detenemos el hilo 2
+            framePrincipal.getCarrito().getProductos().clear(); // opcional, limpiar carrito
+            framePrincipal.mostrarPanel(FrameP.LOGIN_PANEL); // volver al login
+        });
 
         return panel;
     }

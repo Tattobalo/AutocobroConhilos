@@ -14,12 +14,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class LoginThread extends Thread {
-    
+
     private String nombreUsuario;
     private String contrasena;
     private Login loginPanel;
     private FrameP framePrincipal;
-    
+
     public LoginThread(String nombreUsuario, String contrasena, Login loginPanel, FrameP framePrincipal) {
         this.nombreUsuario = nombreUsuario;
         this.contrasena = contrasena;
@@ -29,37 +29,40 @@ public class LoginThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println("HILO 1 (Login): Iniciando proceso de autenticación para " + nombreUsuario + ".");
+        System.out.println("HILO 1 (Login): Iniciando proceso de autenticacion para " + nombreUsuario + ".");
 
         Connection conexion = null;
         try {
             conexion = ConectorBD.conectar();
             String query = "SELECT id, nombre_usuario, correo, ruta_foto_perfil FROM usuarios WHERE nombre_usuario = ? AND contrasena = ?";
-            
+
             String contrasenaHash = hashearContrasena(contrasena);
-            
+
             try (PreparedStatement pstmt = conexion.prepareStatement(query)) {
                 pstmt.setString(1, nombreUsuario);
                 pstmt.setString(2, contrasenaHash);
-                
+
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         int id = rs.getInt("id");
                         String nombreUsuario = rs.getString("nombre_usuario");
                         String correo = rs.getString("correo");
                         String rutaFoto = rs.getString("ruta_foto_perfil");
-                        
+
                         Usuarios usuario = new Usuarios(id, nombreUsuario, correo, rutaFoto);
-                        
+
                         SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso!", "Exito", JOptionPane.INFORMATION_MESSAGE);
-                            
+
                             framePrincipal.setUsuarioActual(usuario);
                             framePrincipal.iniciarSesion(); // <-- Inicia el HILO 2 (Sesión) aquí
-                            
-                            framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL); 
+
+                            // 🔹 HILOS 3 Y 4
+                            framePrincipal.iniciarHilosCarrito(); // hilo 3 y 4
+
+                            framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL);
                         });
-                        System.out.println("HILO 1 (Login): Autenticacion exitosa. Se inició la sesion.");
+                        System.out.println("HILO 1 (Login): Autenticacion exitosa. Se inicio la sesion.");
                     } else {
                         SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(loginPanel, "Usuario o contraseña incorrectos.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -103,7 +106,7 @@ public class LoginThread extends Thread {
         }
         return hexString.toString();
     }
-    
+
     private boolean verificarContrasena(String contrasenaPlana, String contrasenaHash) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         byte[] hash = md.digest(contrasenaPlana.getBytes());

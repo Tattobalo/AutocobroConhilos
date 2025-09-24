@@ -6,7 +6,7 @@ public class SesionThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println("HILO 2 (Sesión): Sesion iniciada y monitoreando en segundo plano.");
+        System.out.println("HILO 2 (Sesion): Sesion iniciada y monitoreando en segundo plano.");
         
         while (sesionActiva) {
             try {
@@ -19,12 +19,12 @@ public class SesionThread extends Thread {
             }
         }
         
-        System.out.println("HILO 2 (Sesion): Sesión terminada.");
+        System.out.println("HILO 2 (Sesion): Sesion terminada.");
     }
     
     // Método público para detener el hilo de forma segura
     public void detenerSesion() {
-        System.out.println("HILO 2 (Sesion): Sesión terminada.");
         sesionActiva = false;
+        this.interrupt();
     }
 }

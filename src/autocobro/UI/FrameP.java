@@ -6,6 +6,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import autocobro.Modelos.Usuarios;
+import autocobro.Nucleo.CalculaPrecioThread;
+import autocobro.Nucleo.SeleccionDeProductosThread;
 import autocobro.Nucleo.SesionThread;
 
 public class FrameP extends JFrame {
@@ -20,12 +22,15 @@ public class FrameP extends JFrame {
 
     private SesionThread sesionThread;
     private Usuarios usuarioActual;
-    private Carrito carrito;
+    private final Carrito carrito;
+
+    private SeleccionDeProductosThread hilo3;
+    private CalculaPrecioThread hilo4;
 
     public FrameP() {
+
         setTitle("AutoCobro");
         setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setUndecorated(true);
 
@@ -45,7 +50,14 @@ public class FrameP extends JFrame {
         titleBarPanel.add(minimizeButton);
 
         JButton closeButton = createControlButton("X");
-        closeButton.addActionListener(e -> System.exit(0));
+
+        closeButton.addActionListener(e -> {
+            detenerHilosCarrito(); // HILOS 3 y 4 
+            cerrarSesion();
+            dispose();
+            System.exit(0);
+        });
+
         titleBarPanel.add(closeButton);
 
         mainContainer.add(titleBarPanel, BorderLayout.NORTH);
@@ -108,6 +120,26 @@ public class FrameP extends JFrame {
 
     public Carrito getCarrito() {
         return this.carrito;
+    }
+
+    public void iniciarHilosCarrito() {
+        if (hilo3 == null || !hilo3.isAlive()) {
+            hilo3 = new SeleccionDeProductosThread(carrito);
+            hilo3.start();
+        }
+        if (hilo4 == null || !hilo4.isAlive()) {
+            hilo4 = new CalculaPrecioThread(carrito);
+            hilo4.start();
+        }
+    }
+
+    public void detenerHilosCarrito() {
+        if (hilo3 != null) {
+            hilo3.detener();
+        }
+        if (hilo4 != null) {
+            hilo4.detener();
+        }
     }
 
     private JButton createControlButton(String text) {

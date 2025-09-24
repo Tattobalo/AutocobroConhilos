@@ -12,28 +12,28 @@ public class Carrito {
         this.total = 0.0;
     }
 
-    public void agregarProducto(ProductoSeleccionado producto) {
+    public synchronized void agregarProducto(ProductoSeleccionado producto) {
         productos.add(producto);
         calcularTotal();
     }
     
-    public void limpiarCarrito() {
+    public synchronized void limpiarCarrito() {
         productos.clear();
         calcularTotal();
     }
 
-    public List<ProductoSeleccionado> getProductos() {
+    public synchronized List<ProductoSeleccionado> getProductos() {
         return productos;
     }
 
-    private void calcularTotal() {
+    private synchronized void calcularTotal() {
         total = 0.0;
         for (ProductoSeleccionado p : productos) {
             total += p.getSubtotal();
         }
     }
     
-    public double getTotal() {
+    public synchronized double getTotal() {
         return total;
     }
 }
