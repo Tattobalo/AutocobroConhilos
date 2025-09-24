@@ -36,6 +36,27 @@ public class RegistroThread extends Thread {
 
     @Override
     public void run() {
+
+        if (!validarNombre(nombreUsuario)) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(registroPanel,
+                        "El nombre de usuario debe contener solo letras y no estar vacío.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            });
+            return;
+        }
+
+        if (!validarCorreo(correo)) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(registroPanel,
+                        "El correo electrónico no es válido. Debe incluir un '@'.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            });
+            return;
+        }
+
         Connection conexion = null;
         try {
             conexion = ConectorBD.conectar();
@@ -104,6 +125,20 @@ public class RegistroThread extends Thread {
                 }
             }
         }
+    }
+
+    private boolean validarNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return false;
+        }
+        return nombre.matches("[a-zA-Z ]{2,}"); // al menos 2 letras
+    }
+
+    private boolean validarCorreo(String correo) {
+        if (correo == null || correo.trim().isEmpty()) {
+            return false;
+        }
+        return correo.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,6}$");
     }
 
     private String hashearContrasena(String contrasenaPlana) throws NoSuchAlgorithmException {

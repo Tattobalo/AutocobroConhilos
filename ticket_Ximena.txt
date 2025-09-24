@@ -1,0 +1,9 @@
+----- TICKET DE COMPRA -----
+Usuario: Ximena
+Correo: xime@gmail.com
+
+Productos:
+----------------------------
+TOTAL: $1142.50
+TOTAL CON DESCUENTO: $1028.25
+----------------------------

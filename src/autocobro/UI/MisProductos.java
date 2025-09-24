@@ -1,6 +1,7 @@
 package autocobro.UI;
 
 import autocobro.Modelos.Usuarios;
+import autocobro.Nucleo.FinalizarThread;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -175,10 +176,8 @@ public class MisProductos extends JPanel {
         panel.add(botonPagar);
 
         botonPagar.addActionListener(e -> {
-            framePrincipal.detenerHilosCarrito(); //detenemos hilo 3 y 4
-            framePrincipal.cerrarSesion();  // detenemos el hilo 2
-            framePrincipal.getCarrito().getProductos().clear(); // opcional, limpiar carrito
-            framePrincipal.mostrarPanel(FrameP.LOGIN_PANEL); // volver al login
+            FinalizarThread hilo6 = new FinalizarThread(framePrincipal);
+            hilo6.start();
         });
 
         return panel;
