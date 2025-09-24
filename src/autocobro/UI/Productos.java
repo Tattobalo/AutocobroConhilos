@@ -3,6 +3,7 @@ package autocobro.UI;
 import autocobro.Util.ConectorBD;
 import autocobro.Modelos.Producto;
 import autocobro.Modelos.ProductoSeleccionado;
+import autocobro.Nucleo.DescuentoThread;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -99,22 +100,22 @@ public class Productos extends JPanel {
 
         botonAgregar.addActionListener(e -> {
             framePrincipal.getCarrito().limpiarCarrito();
-            
+
             Component[] filas = tablaContenido.getComponents();
-            for(int i=0; i<filas.length; i++) {
-                if(filas[i] instanceof JPanel) { // 🔹 Verifica que el componente es un JPanel
+            for (int i = 0; i < filas.length; i++) {
+                if (filas[i] instanceof JPanel) { // 🔹 Verifica que el componente es un JPanel
                     JPanel fila = (JPanel) filas[i];
                     Producto producto = productosMostrados.get(i);
-                    
+
                     JTextField campoCantidad = (JTextField) fila.getComponent(2);
                     try {
                         int cantidad = Integer.parseInt(campoCantidad.getText());
                         if (cantidad > 0) {
                             ProductoSeleccionado ps = new ProductoSeleccionado(
-                                producto.getNombre(), 
-                                producto.getDescripcion(), 
-                                producto.getPrecio(), 
-                                cantidad
+                                    producto.getNombre(),
+                                    producto.getDescripcion(),
+                                    producto.getPrecio(),
+                                    cantidad
                             );
                             framePrincipal.getCarrito().agregarProducto(ps);
                         }
@@ -123,9 +124,25 @@ public class Productos extends JPanel {
                     }
                 }
             }
-            JOptionPane.showMessageDialog(this, "Productos agregados al carrito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            
+            //JOptionPane.showMessageDialog(this, "Productos agregados al carrito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            // Ejecutar hilo de descuento
+            DescuentoThread hiloDescuento = new DescuentoThread(framePrincipal.getCarrito());
+            hiloDescuento.start();
+
+            // Esperar a que termine y actualizar precios
+            try {
+                hiloDescuento.join();
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+
+            // Mostrar panel MisProductos
             framePrincipal.mostrarPanel(FrameP.MIS_PRODUCTOS_PANEL);
+
+            // Actualizar precios en los JTextField de MisProductos
+            framePrincipal.getMisProductosPanel().actualizarPrecios();
+
         });
 
         return panel;
@@ -150,15 +167,14 @@ public class Productos extends JPanel {
         boton.setOpaque(true);
         return boton;
     }
-    
+
     // Este método usa el hilo para la conexión a la BD
     private void cargarProductos() {
         try (Connection conexion = ConectorBD.conectar()) {
             String query = "SELECT p.nombre, pp.descripcion, pp.precio FROM productos p "
                     + "JOIN precios_presentaciones pp ON p.id = pp.producto_id";
 
-            try (PreparedStatement pstmt = conexion.prepareStatement(query);
-                 ResultSet rs = pstmt.executeQuery()) {
+            try (PreparedStatement pstmt = conexion.prepareStatement(query); ResultSet rs = pstmt.executeQuery()) {
 
                 productosMostrados = new ArrayList<>();
                 while (rs.next()) {
@@ -174,7 +190,7 @@ public class Productos extends JPanel {
             JOptionPane.showMessageDialog(this, "Error al cargar productos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     public void mostrarProductos(List<Producto> productos) {
         tablaContenido.removeAll();
         tablaContenido.revalidate();

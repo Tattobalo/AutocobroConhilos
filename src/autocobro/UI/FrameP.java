@@ -21,11 +21,28 @@ public class FrameP extends JFrame {
     private JPanel cardPanel = new JPanel(cardLayout);
 
     private SesionThread sesionThread;
+    private MisProductos misProductosPanel; // atributo de clase
     private Usuarios usuarioActual;
     private final Carrito carrito;
 
     private SeleccionDeProductosThread hilo3;
     private CalculaPrecioThread hilo4;
+
+    public void setUsuarioActual(Usuarios usuario) {
+        this.usuarioActual = usuario;
+    }
+
+    public Usuarios getUsuarioActual() {
+        return usuarioActual;
+    }
+
+    public MisProductos getMisProductosPanel() {
+        return misProductosPanel;
+    }
+
+    public Carrito getCarrito() {
+        return this.carrito;
+    }
 
     public FrameP() {
 
@@ -66,7 +83,7 @@ public class FrameP extends JFrame {
         Login loginPanel = new Login(this);
         Registro registroPanel = new Registro(this);
         Productos productosPanel = new Productos(this);
-        MisProductos misProductosPanel = new MisProductos(this); // <-- Nueva instancia
+        misProductosPanel = new MisProductos(this); // <-- Nueva instancia
 
         cardPanel.add(loginPanel, LOGIN_PANEL);
         cardPanel.add(registroPanel, REGISTRO_PANEL);
@@ -97,14 +114,6 @@ public class FrameP extends JFrame {
         add(mainContainer);
     }
 
-    public void setUsuarioActual(Usuarios usuario) {
-        this.usuarioActual = usuario;
-    }
-
-    public Usuarios getUsuarioActual() {
-        return usuarioActual;
-    }
-
     public void iniciarSesion() {
         if (sesionThread == null || !sesionThread.isAlive()) {
             sesionThread = new SesionThread();
@@ -118,17 +127,13 @@ public class FrameP extends JFrame {
         }
     }
 
-    public Carrito getCarrito() {
-        return this.carrito;
-    }
-
     public void iniciarHilosCarrito() {
         if (hilo3 == null || !hilo3.isAlive()) {
             hilo3 = new SeleccionDeProductosThread(carrito);
             hilo3.start();
         }
         if (hilo4 == null || !hilo4.isAlive()) {
-            hilo4 = new CalculaPrecioThread(carrito);
+            hilo4 = new CalculaPrecioThread(carrito, this);
             hilo4.start();
         }
     }

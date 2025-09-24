@@ -14,7 +14,9 @@ public class MisProductos extends JPanel {
     private CampoFoto campoFoto;
 
     private JPanel tablaContenido;
+
     private JTextField precioFinalField;
+    private JTextField precioConDescuentoField;
 
     public MisProductos(FrameP framePrincipal) {
         this.framePrincipal = framePrincipal;
@@ -78,6 +80,10 @@ public class MisProductos extends JPanel {
         agregarProductosLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+
+                // Limpiar carrito antes de ir al panel de productos
+                framePrincipal.getCarrito().limpiarCarrito();
+
                 framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL);
             }
         });
@@ -142,16 +148,27 @@ public class MisProductos extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         panel.add(scrollPane);
 
-        JLabel precioFinalLabel = new JLabel("Precio final:");
+        JLabel precioFinalLabel = new JLabel("Precio normal:");
         precioFinalLabel.setForeground(Color.WHITE);
-        precioFinalLabel.setBounds(360, 460, 100, 30);
+        precioFinalLabel.setBounds(20, 460, 120, 30);
         panel.add(precioFinalLabel);
 
         // ahora sí usamos el atributo de clase
         precioFinalField = new JTextField();
         precioFinalField.setEditable(false);
-        precioFinalField.setBounds(470, 460, 100, 30);
+        precioFinalField.setBounds(150, 460, 100, 30);
         panel.add(precioFinalField);
+
+        // Precio con descuento
+        JLabel precioDescuentoLabel = new JLabel("Precio con descuento:");
+        precioDescuentoLabel.setForeground(Color.WHITE);
+        precioDescuentoLabel.setBounds(270, 460, 150, 30);
+        panel.add(precioDescuentoLabel);
+
+        precioConDescuentoField = new JTextField();
+        precioConDescuentoField.setEditable(false);
+        precioConDescuentoField.setBounds(420, 460, 100, 30);
+        panel.add(precioConDescuentoField);
 
         JButton botonPagar = new BotonRedondeado("Pagar", new Color(153, 51, 255));
         botonPagar.setBounds(470, 500, 100, 40);
@@ -165,6 +182,18 @@ public class MisProductos extends JPanel {
         });
 
         return panel;
+    }
+
+    public void actualizarPrecios() {
+        mostrarProductosCarrito();
+        double total = framePrincipal.getCarrito().getTotal();
+        double totalConDescuento = total * 0.9; // ejemplo: 10% de descuento
+        precioConDescuentoField.setText("$" + String.format("%.2f", totalConDescuento));
+
+        // Actualiza ambos campos
+        precioFinalField.setText("$" + String.format("%.2f", total));
+        precioConDescuentoField.setText("$" + String.format("%.2f", totalConDescuento));
+
     }
 
     public void mostrarProductosCarrito() {

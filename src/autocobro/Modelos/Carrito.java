@@ -36,4 +36,9 @@ public class Carrito {
     public synchronized double getTotal() {
         return total;
     }
+    
+    // Total redondeado a 2 decimales para UI y consola
+    public synchronized double getTotalRedondeado() {
+        return Math.round(total * 100.0) / 100.0;
+    }
 }
