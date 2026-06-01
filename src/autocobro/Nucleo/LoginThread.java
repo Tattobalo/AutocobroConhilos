@@ -45,22 +45,33 @@ public class LoginThread extends Thread {
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         int id = rs.getInt("id");
-                        String nombreUsuario = rs.getString("nombre_usuario");
+                        String nombreUserBD = rs.getString("nombre_usuario");
                         String correo = rs.getString("correo");
                         String rutaFoto = rs.getString("ruta_foto_perfil");
 
-                        Usuarios usuario = new Usuarios(id, nombreUsuario, correo, rutaFoto);
+                        Usuarios usuario = new Usuarios(id, nombreUserBD, correo, rutaFoto);
 
                         SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso!", "Exito", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(loginPanel, "¡Inicio de sesión exitoso como " + nombreUserBD + "!", "Exito", JOptionPane.INFORMATION_MESSAGE);
 
                             framePrincipal.setUsuarioActual(usuario);
-                            framePrincipal.iniciarSesion(); // <-- Inicia el HILO 2 (Sesión) aquí
+                            framePrincipal.iniciarSesion(); // <-- Inicia el HILO 2 (Sesión)
 
-                            // 🔹 HILOS 3 Y 4
-                            framePrincipal.iniciarHilosCarrito(); // hilo 3 y 4
+                            // VACIAR CAMPOS DEL LOGIN: Limpieza de seguridad preventiva
+                            if (framePrincipal.getLoginPanel() != null) {
+                                framePrincipal.getLoginPanel().getCampoUsuario().setText("");
+                                framePrincipal.getLoginPanel().getCampoContrasena().setText("");
+                            }
 
-                            framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL);
+                            // 🔹 ENRUTAMIENTO DE INTERFAZ DE ADMINISTRACIÓN O AUTOCOBRO
+                            if (nombreUserBD.equalsIgnoreCase("admin")) {
+                                System.out.println("HILO 1 (Login): Detectado rol de Administrador. Redirigiendo a control de insumos.");
+                                framePrincipal.mostrarPanel(FrameP.ADMIN_PANEL); // Ir al nuevo panel de insumos
+                            } else {
+                                // Flujo ordinario para clientes estándar
+                                framePrincipal.iniciarHilosCarrito(); // Inicia hilos 3 y 4
+                                framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL); // Ir a la compra
+                            }
                         });
                         System.out.println("HILO 1 (Login): Autenticacion exitosa. Se inicio la sesion.");
                     } else {

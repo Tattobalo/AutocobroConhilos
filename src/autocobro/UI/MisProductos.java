@@ -18,6 +18,9 @@ public class MisProductos extends JPanel {
 
     private JTextField precioFinalField;
     private JTextField precioConDescuentoField;
+    
+    // 🔹 CORRECCIÓN DE CONCURRENCIA: Convertido en atributo de clase para controlar su estado
+    private JButton botonPagar;
 
     public MisProductos(FrameP framePrincipal) {
         this.framePrincipal = framePrincipal;
@@ -31,17 +34,8 @@ public class MisProductos extends JPanel {
         JPanel panelContenido = crearPanelContenido();
         panelContenido.setBounds(190, 10, 600, 550);
         add(panelContenido);
-
-        //SwingUtilities.invokeLater(this::mostrarFotoUsuario);
     }
 
-    /*private void mostrarFotoUsuario() {
-        Usuarios usuario = framePrincipal.getUsuarioActual();
-        if (usuario != null && usuario.getRutaFotoPerfil() != null && !usuario.getRutaFotoPerfil().isEmpty()) {
-            String rutaCompleta = "Images" + File.separator + usuario.getRutaFotoPerfil();
-            campoFoto.cargarImagen(rutaCompleta);
-        }
-    }*/
     private JPanel crearPanelLateral() {
         JPanel panel = new JPanel() {
             @Override
@@ -81,10 +75,7 @@ public class MisProductos extends JPanel {
         agregarProductosLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-
-                // Limpiar carrito antes de ir al panel de productos
                 framePrincipal.getCarrito().limpiarCarrito();
-
                 framePrincipal.mostrarPanel(FrameP.PRODUCTOS_PANEL);
             }
         });
@@ -137,7 +128,6 @@ public class MisProductos extends JPanel {
         precioHeader.setBounds(470, 80, 100, 30);
         panel.add(precioHeader);
 
-        // Aquí va la tabla de productos
         tablaContenido = new JPanel();
         tablaContenido.setOpaque(false);
         tablaContenido.setLayout(null);
@@ -154,13 +144,11 @@ public class MisProductos extends JPanel {
         precioFinalLabel.setBounds(20, 460, 120, 30);
         panel.add(precioFinalLabel);
 
-        // ahora sí usamos el atributo de clase
         precioFinalField = new JTextField();
         precioFinalField.setEditable(false);
         precioFinalField.setBounds(150, 460, 100, 30);
         panel.add(precioFinalField);
 
-        // Precio con descuento
         JLabel precioDescuentoLabel = new JLabel("Precio con descuento:");
         precioDescuentoLabel.setForeground(Color.WHITE);
         precioDescuentoLabel.setBounds(270, 460, 150, 30);
@@ -171,12 +159,29 @@ public class MisProductos extends JPanel {
         precioConDescuentoField.setBounds(420, 460, 100, 30);
         panel.add(precioConDescuentoField);
 
-        JButton botonPagar = new BotonRedondeado("Pagar", new Color(153, 51, 255));
+        // CORRECCIÓN: Enlazado al atributo global reutilizable
+        botonPagar = new BotonRedondeado("Pagar", new Color(153, 51, 255));
         botonPagar.setBounds(470, 500, 100, 40);
         panel.add(botonPagar);
 
+        // 🔹 CONTROL DE FLUJO ATÓMICO Y DIÁLOGO FISCAL
         botonPagar.addActionListener(e -> {
-            FinalizarThread hilo6 = new FinalizarThread(framePrincipal);
+            // Paso A: Deshabilitar el botón de inmediato para matar el bug del doble clic
+            botonPagar.setEnabled(false);
+
+            // Paso B: Lanzar el cuadro de confirmación para la facturación externa
+            int seleccion = JOptionPane.showConfirmDialog(
+                    this,
+                    "¿Deseas generar el código de facturación electrónica para tu compra?",
+                    "Módulo Fiscal Asíncrono - LiPaDaS",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            boolean quiereFactura = (seleccion == JOptionPane.YES_OPTION);
+
+            // Paso C: Arrancar el Hilo 6 pasándole la bandera lógica
+            FinalizarThread hilo6 = new FinalizarThread(framePrincipal, quiereFactura);
             hilo6.start();
         });
 
@@ -186,17 +191,12 @@ public class MisProductos extends JPanel {
     public void actualizarPrecios() {
         mostrarProductosCarrito();
         double total = framePrincipal.getCarrito().getTotal();
-        double totalConDescuento = total * 0.9; // ejemplo: 10% de descuento
+        double totalConDescuento = total * 0.9; 
         precioConDescuentoField.setText("$" + String.format("%.2f", totalConDescuento));
-
-        // Actualiza ambos campos
         precioFinalField.setText("$" + String.format("%.2f", total));
-        precioConDescuentoField.setText("$" + String.format("%.2f", totalConDescuento));
-
     }
 
     public void mostrarProductosCarrito() {
-
         Usuarios usuario = framePrincipal.getUsuarioActual();
         if (usuario != null && usuario.getRutaFotoPerfil() != null && !usuario.getRutaFotoPerfil().isEmpty()) {
             String rutaCompleta = "Images" + File.separator + usuario.getRutaFotoPerfil();
@@ -219,7 +219,7 @@ public class MisProductos extends JPanel {
             fila.setBounds(0, y, 540, 30);
 
             JTextField nombre = crearCelda(producto.getNombre(), 0, 0, 150, 25);
-            JTextField descripcion = crearCelda(producto.getDescripcion(), 160, 0, 200, 25);
+            JTextField  descripcion = crearCelda(producto.getDescripcion(), 160, 0, 200, 25);
             JTextField cantidad = crearCelda(String.valueOf(producto.getCantidad()), 370, 0, 50, 25);
             JTextField precio = crearCelda("$" + String.format("%.2f", producto.getPrecio() * producto.getCantidad()), 430, 0, 100, 25);
 
@@ -248,5 +248,12 @@ public class MisProductos extends JPanel {
         campo.setBackground(new Color(200, 200, 200));
         campo.setBounds(x, y, w, h);
         return campo;
+    }
+
+    // 🔹 MÉTODO PÚBLICO DE RESTABLECIMIENTO: Permite reactivar el botón de pagar en compras posteriores
+    public void restablecerBotonPagar() {
+        if (botonPagar != null) {
+            botonPagar.setEnabled(true);
+        }
     }
 }

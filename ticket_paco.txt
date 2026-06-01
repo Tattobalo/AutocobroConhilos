@@ -1,0 +1,10 @@
+----- TICKET DE COMPRA -----
+Usuario: paco
+Correo: tattobalo10@gmail.com
+
+Productos:
+Paleta | Cantidad: 20 | Subtotal: $360.00
+----------------------------
+TOTAL: $400.00
+TOTAL CON DESCUENTO: $360.00
+----------------------------

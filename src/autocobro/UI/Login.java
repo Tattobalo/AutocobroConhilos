@@ -9,7 +9,11 @@ import java.awt.geom.RoundRectangle2D;
 
 public class Login extends JPanel {
 
-    private FrameP framePrincipal;
+    private final FrameP framePrincipal;
+    
+    // Atributos de clase globales para que los getters tengan acceso a la memoria
+    private JTextField campoUsuario;
+    private JPasswordField campoContrasena;
 
     public Login(FrameP framePrincipal) {
         this.framePrincipal = framePrincipal;
@@ -23,7 +27,6 @@ public class Login extends JPanel {
 
     private JPanel crearPanel() {
         JPanel panel = new JPanel() {
-
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -42,36 +45,38 @@ public class Login extends JPanel {
         panel.setLayout(null);
         panel.setOpaque(false);
         
-        // 🔹 Título
+        // Título
         JLabel titulo = new JLabel("AutoCobro");
         titulo.setFont(new Font("Arial", Font.BOLD, 28));
         titulo.setForeground(Color.WHITE);
-        titulo.setBounds(100, 40, 300, 40); // x, y, ancho, alto
+        titulo.setBounds(100, 40, 300, 40);
         panel.add(titulo);
 
-        // 🔹 Usuario
+        // Usuario
         JLabel etiquetaUsuario = new JLabel("Usuario");
         etiquetaUsuario.setFont(new Font("Arial", Font.BOLD, 14));
         etiquetaUsuario.setForeground(Color.WHITE);
         etiquetaUsuario.setBounds(50, 120, 100, 20);
         panel.add(etiquetaUsuario);
 
-        JTextField campoUsuario = new CampoTextoRedondeado(20);
+        // CORRECCIÓN: Quitamos 'JTextField' de adelante para usar el atributo global de la clase
+        campoUsuario = new CampoTextoRedondeado(20);
         campoUsuario.setBounds(50, 150, 300, 30);
         panel.add(campoUsuario);
 
-        // 🔹 Contraseña
+        // Contraseña
         JLabel etiquetaContrasena = new JLabel("Contraseña");
         etiquetaContrasena.setFont(new Font("Arial", Font.BOLD, 14));
         etiquetaContrasena.setForeground(Color.WHITE);
         etiquetaContrasena.setBounds(50, 200, 100, 20);
         panel.add(etiquetaContrasena);
 
-        JPasswordField campoContrasena = new CampoContrasenaRedondeado(20);
+        // CORRECCIÓN: Quitamos 'JPasswordField' de adelante para usar el atributo global de la clase
+        campoContrasena = new CampoContrasenaRedondeado(20);
         campoContrasena.setBounds(50, 230, 300, 30);
         panel.add(campoContrasena);
 
-        // 🔹 Botón Ingresar
+        // Botón Ingresar
         JButton botonIngresar = new BotonRedondeado("Inicia sesión", new Color(153, 51, 255));
         botonIngresar.setBounds(100, 280, 200, 40);
         panel.add(botonIngresar);
@@ -83,7 +88,7 @@ public class Login extends JPanel {
             loginThread.start();
         });
 
-        // 🔹 Registro
+        // Registro
         JLabel etiquetaNoCuenta = new JLabel("¿No tienes una cuenta?");
         etiquetaNoCuenta.setFont(new Font("Arial", Font.PLAIN, 12));
         etiquetaNoCuenta.setForeground(Color.WHITE);
@@ -99,13 +104,19 @@ public class Login extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 framePrincipal.mostrarPanel(FrameP.REGISTRO_PANEL);
-                
-                
-                
             }
         });
         panel.add(enlaceRegistrarse);
 
         return panel;
+    }
+
+    // Métodos Getter públicos que solucionan los errores de compilación en LoginThread
+    public JTextField getCampoUsuario() {
+        return this.campoUsuario;
+    }
+
+    public JPasswordField getCampoContrasena() {
+        return this.campoContrasena;
     }
 }

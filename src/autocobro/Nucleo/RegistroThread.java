@@ -66,9 +66,10 @@ public class RegistroThread extends Thread {
             if (rutaFoto != null && !rutaFoto.isEmpty()) {
                 try {
                     File archivo = new File(rutaFoto);
-                    System.out.println("Archivo existe: " + archivo.exists()); // <--- aquí
-                    System.out.println("Ruta absoluta: " + archivo.getAbsolutePath());
+                    System.out.println("[HILO REGISTRO] Archivo existe: " + archivo.exists());
+                    System.out.println("[HILO REGISTRO] Ruta absoluta origen: " + archivo.getAbsolutePath());
 
+                    // Directorio del proyecto para almacenar imágenes compartidas
                     Path carpetaDestino = Paths.get("Images");
                     if (!Files.exists(carpetaDestino)) {
                         Files.createDirectories(carpetaDestino);
@@ -78,10 +79,11 @@ public class RegistroThread extends Thread {
                     Files.copy(archivo.toPath(), destino, StandardCopyOption.REPLACE_EXISTING);
 
                     nombreArchivoFoto = destino.getFileName().toString();
+                    System.out.println("[HILO REGISTRO] Foto guardada localmente como: " + nombreArchivoFoto);
                 } catch (Exception e) {
                     e.printStackTrace();
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(registroPanel, "Error al guardar la foto: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(registroPanel, "Error al guardar la foto física: " + e.getMessage(), "Error de E/S", JOptionPane.ERROR_MESSAGE);
                     });
                     return;
                 }
@@ -100,17 +102,27 @@ public class RegistroThread extends Thread {
                 if (filasAfectadas > 0) {
                     SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(registroPanel, "¡Registro exitoso!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                        
+                        // LIMPIEZA DE SEGURIDAD TRAS EL ÉXITO COMERCIAL (Sincronizado con getters de la UI)
+                        registroPanel.getCampoUsuario().setText("");
+                        registroPanel.getCampoContrasena().setText("");
+                        registroPanel.getCampoCorreo().setText("");
+                        if (registroPanel.getCampoFotoComponente() != null) {
+                            registroPanel.getCampoFotoComponente().restablecerImagen();
+                        }
+                        
+                        // Redirigir al Login limpio mediante CardLayout de FrameP
                         framePrincipal.mostrarPanel(FrameP.LOGIN_PANEL);
                     });
                 } else {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(registroPanel, "No se pudo registrar al usuario.", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(registroPanel, "No se pudo registrar al usuario en las tablas de XAMPP.", "Error", JOptionPane.ERROR_MESSAGE);
                     });
                 }
             }
         } catch (SQLException e) {
             SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(registroPanel, "Error al conectar a la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(registroPanel, "Error al conectar a la base de datos: " + e.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
             });
         } catch (NoSuchAlgorithmException e) {
             SwingUtilities.invokeLater(() -> {
@@ -131,7 +143,7 @@ public class RegistroThread extends Thread {
         if (nombre == null || nombre.trim().isEmpty()) {
             return false;
         }
-        return nombre.matches("[a-zA-Z ]{2,}"); // al menos 2 letras
+        return nombre.matches("[a-zA-Z ]{2,}");
     }
 
     private boolean validarCorreo(String correo) {

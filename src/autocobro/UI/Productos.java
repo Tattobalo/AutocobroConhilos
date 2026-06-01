@@ -6,8 +6,6 @@ import autocobro.Modelos.ProductoSeleccionado;
 import autocobro.Nucleo.DescuentoThread;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -103,7 +101,7 @@ public class Productos extends JPanel {
 
             Component[] filas = tablaContenido.getComponents();
             for (int i = 0; i < filas.length; i++) {
-                if (filas[i] instanceof JPanel) { // 🔹 Verifica que el componente es un JPanel
+                if (filas[i] instanceof JPanel) { //  Verifica que el componente es un JPanel
                     JPanel fila = (JPanel) filas[i];
                     Producto producto = productosMostrados.get(i);
 

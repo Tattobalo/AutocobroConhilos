@@ -1,0 +1,10 @@
+----- TICKET DE COMPRA -----
+Usuario: Xime
+Correo: gesturiel@gmail.com
+
+Productos:
+Paleta | Cantidad: 4 | Subtotal: $72.00
+----------------------------
+TOTAL: $80.00
+TOTAL CON DESCUENTO: $72.00
+----------------------------
